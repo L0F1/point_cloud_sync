@@ -1,5 +1,7 @@
 import pyrealsense2 as rs
 
+from entity import Stream
+
 
 class BagReader:
     __resolution = [1280, 720]
@@ -8,7 +10,7 @@ class BagReader:
     def __init__(self, file: str):
         self.__file = file
 
-    def readBagFile(self):
+    def read_bag_file(self) -> Stream:
         pipeline = rs.pipeline()
         config = rs.config()
 
@@ -17,10 +19,10 @@ class BagReader:
         config.enable_stream(rs.stream.depth, *BagReader.__resolution, rs.format.z16, BagReader.__fps)
         config.enable_stream(rs.stream.color, *BagReader.__resolution, rs.format.bgr8, BagReader.__fps)
 
-        return pipeline, config
+        return Stream(pipeline, config)
 
-    def setResolution(self, resolution: []):
+    def set_resolution(self, resolution: []):
         self.__resolution = resolution
 
-    def setFps(self, fps: int):
+    def set_fps(self, fps: int):
         self.__fps: fps
