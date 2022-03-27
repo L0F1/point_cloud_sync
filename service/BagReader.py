@@ -1,5 +1,4 @@
 import pyrealsense2 as rs
-
 from entity import Stream
 
 
