@@ -1,27 +1,26 @@
 import pyrealsense2 as rs
 from entity import Stream
+from service.StreamSupplier import StreamSupplier
 
 
-class BagReader:
-    __resolution = [1280, 720]
-    __fps = 30
+class BagReader(StreamSupplier):
 
-    def __init__(self, file: str):
-        self.__file = file
+    def __init__(self, paths: [str], resolution=None, fps=30):
+        super(BagReader, self).__init__(resolution, fps)
+        self.__paths = paths
 
-    def read_bag_file(self) -> Stream:
-        pipeline = rs.pipeline()
-        config = rs.config()
+    def get_streams(self):
+        streams = []
 
-        rs.config.enable_device_from_file(config, self.__file)
+        for path in self.__paths:
+            pipeline = rs.pipeline()
+            config = rs.config()
 
-        config.enable_stream(rs.stream.depth, *BagReader.__resolution, rs.format.z16, BagReader.__fps)
-        config.enable_stream(rs.stream.color, *BagReader.__resolution, rs.format.bgr8, BagReader.__fps)
+            rs.config.enable_device_from_file(config, path)
 
-        return Stream(pipeline, config)
+            config.enable_stream(rs.stream.depth, *self._resolution, rs.format.z16, self._fps)
+            config.enable_stream(rs.stream.color, *self._resolution, rs.format.bgr8, self._fps)
 
-    def set_resolution(self, resolution: []):
-        self.__resolution = resolution
+            streams.append(Stream(pipeline, config))
 
-    def set_fps(self, fps: int):
-        self.__fps: fps
+        return streams
