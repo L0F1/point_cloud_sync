@@ -9,14 +9,14 @@ class BagReader(StreamSupplier):
         super(BagReader, self).__init__(resolution, fps)
         self.__paths = paths
 
-    def get_streams(self):
+    def get_streams(self, record=None, path=None):
         streams = []
 
-        for path in self.__paths:
+        for p in self.__paths:
             pipeline = rs.pipeline()
             config = rs.config()
 
-            rs.config.enable_device_from_file(config, path)
+            rs.config.enable_device_from_file(config, p)
 
             config.enable_stream(rs.stream.depth, *self._resolution, rs.format.z16, self._fps)
             config.enable_stream(rs.stream.color, *self._resolution, rs.format.bgr8, self._fps)

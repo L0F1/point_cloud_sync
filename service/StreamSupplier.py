@@ -10,7 +10,7 @@ class StreamSupplier:
         self._resolution = resolution
         self._fps = fps
 
-    def get_streams(self) -> [Stream]:
+    def get_streams(self, record, path) -> [Stream]:
         pass
 
     def set_resolution(self, resolution: []):

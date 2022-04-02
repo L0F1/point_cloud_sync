@@ -42,7 +42,7 @@ def match_streams(streams: [Stream]):
 
 
 if __name__ == "__main__":
-    stream_1 = BagReader("C:\\Users\\trien\\Desktop\\bags\\dynamic_box_camera_1.bag").read_bag_file()
-    stream_2 = BagReader("C:\\Users\\trien\\Desktop\\bags\\dynamic_box_camera_2.bag").read_bag_file()
+    streams = BagReader(["C:\\Users\\trien\\Desktop\\bags\\dynamic_box_camera_1.bag",
+                        "C:\\Users\\trien\\Desktop\\bags\\dynamic_box_camera_2.bag"]).get_streams()
 
-    match_streams([stream_1, stream_2])
+    match_streams(streams)

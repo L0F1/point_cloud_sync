@@ -1,26 +1,30 @@
 import logging
+from pathlib import Path
 import pyrealsense2 as rs
 from entity import Stream
 from service import StreamSupplier
 
 
 class CameraManager(StreamSupplier):
+    default_path = Path(__file__).parent.parent.__str__()
 
     def __init__(self, resolution=None, fps=30):
         super(CameraManager, self).__init__(resolution, fps)
         self.logger = logging.getLogger(__name__)
 
-    def get_streams(self):
+    def get_streams(self, record=False, path=default_path):
         streams = []
         context = rs.context()
         camera_serial_nums = self.__find_cameras(context)
 
-        for serial_num in camera_serial_nums:
+        for i, serial_num in enumerate(camera_serial_nums):
             pipeline = rs.pipeline()
             config = rs.config()
             config.enable_device(serial_num)
             config.enable_stream(rs.stream.depth, *self._resolution, rs.format.z16, self._fps)
             config.enable_stream(rs.stream.color, *self._resolution, rs.format.bgr8, self._fps)
+            if record:
+                config.enable_record_to_file(path + f"/camera_{i}")
             streams.append(Stream(pipeline, config))
 
         return streams
