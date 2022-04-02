@@ -8,5 +8,6 @@ if __name__ == "__main__":
     StreamBuilder()\
         .set_stream_supplier(reader)\
         .set_algorithm(fd.surf_detection)\
+        .set_window_size((740, 480))\
         .build()\
         .start_streaming()

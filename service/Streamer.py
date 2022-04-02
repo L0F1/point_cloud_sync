@@ -30,9 +30,10 @@ def display_in_one_window(color_image, depth_colormap):
 
 class Streamer:
 
-    def __init__(self, supplier: StreamSupplier, algorithm: Callable[[Any], None], record: bool, path):
+    def __init__(self, supplier: StreamSupplier, algorithm: Callable[[Any], None], window_size, record: bool, path):
         self.__supplier = supplier
         self.__algorithm = algorithm
+        self.__window_size = window_size
         self.__record = record
         self.__path = path
 
@@ -59,6 +60,10 @@ class Streamer:
 
                 # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
                 depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.1), cv2.COLORMAP_JET)
+
+                color_image = cv2.resize(color_image, self.__window_size)
+                depth_colormap = cv2.resize(depth_colormap, self.__window_size)
+
                 if feature_detection:
                     color_image = self.__algorithm(color_image)
 
@@ -82,6 +87,7 @@ class StreamBuilder:
     def __init__(self):
         self.__supplier = None
         self.__algorithm = None
+        self.__window_size = (1280, 720)
         self.__record = False
         self.__path = None
 
@@ -93,9 +99,13 @@ class StreamBuilder:
         self.__algorithm = algorithm
         return self
 
+    def set_window_size(self, size: ()):
+        self.__window_size = size
+        return self
+
     def record(self, path=None):
         self.__path = path
         return self
 
     def build(self) -> Streamer:
-        return Streamer(self.__supplier, self.__algorithm, self.__record, self.__path)
+        return Streamer(self.__supplier, self.__algorithm, self.__window_size, self.__record, self.__path)
