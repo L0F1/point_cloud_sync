@@ -1,3 +1,5 @@
+import logging
+import feature_detection as fd
 from threading import Thread
 from typing import Callable, Any
 from entity import Stream
@@ -22,6 +24,29 @@ def display_in_one_window(color_image, depth_colormap):
     cv2.imshow('RealSense', images)
 
 
+def get_color_images(streams: [Stream]):
+    color_images = []
+
+    for s in streams:
+        # Wait for a coherent pair of frames: depth and color
+        frames = s.get_pipeline().wait_for_frames()
+        color_frame = frames.get_color_frame()
+
+        # if not color_frame1 or not color_frame2:
+        #    continue
+
+        color_image = np.asanyarray(color_frame.get_data())
+        color_image = cv2.resize(color_image, (640, 480))
+        color_images.append(color_image)
+
+    return color_images
+
+
+def start_pipelines(streams: [Stream]):
+    for s in streams:
+        s.get_pipeline().start(s.get_config())
+
+
 # что должен делать:
 # читать pipeline
 # стримить поток
@@ -31,6 +56,7 @@ def display_in_one_window(color_image, depth_colormap):
 class Streamer:
 
     def __init__(self, supplier: StreamSupplier, algorithm: Callable[[Any], None], window_size, record: bool, path):
+        self.logger = logging.getLogger(__name__)
         self.__supplier = supplier
         self.__algorithm = algorithm
         self.__window_size = window_size
@@ -38,9 +64,30 @@ class Streamer:
         self.__path = path
 
     def start_streaming(self, in_one_window=False, feature_detection=True):
-        streams = self.__supplier.get_streams(self.__record, self.__path)
+        streams = self.__get_streams()
         for s in streams:
             Thread(target=self.__stream, args=(s, in_one_window, feature_detection)).start()
+
+    def match_two_streams(self):
+        streams = self.__get_streams()
+
+        if len(streams) != 2:
+            self.logger.error("There should be two streams for matching")
+            return
+
+        start_pipelines(streams)
+        for s in streams:
+            try:
+                while True:
+                    matched_img = fd.match_features(*get_color_images(streams))
+
+                    # Show images
+                    cv2.namedWindow('RealSense_color', cv2.WINDOW_AUTOSIZE)
+                    cv2.imshow('RealSense_color', matched_img)
+                    cv2.waitKey(0)
+            finally:
+                # Stop streaming
+                s.get_pipeline().stop()
 
     def __stream(self, stream: Stream, in_one_window, feature_detection):
         stream.get_pipeline().start(stream.get_config())
@@ -80,6 +127,9 @@ class Streamer:
         finally:
             # Stop streaming
             stream.get_pipeline().stop()
+
+    def __get_streams(self) -> [Stream]:
+        return self.__supplier.get_streams(self.__record, self.__path)
 
 
 class StreamBuilder:
